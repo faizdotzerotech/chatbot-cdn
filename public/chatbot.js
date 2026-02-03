@@ -114,7 +114,7 @@
                     <input type="text" id="user-message" placeholder="Type your message..." />
                     <button id="send-btn">Send</button>
                 </div>
-                <div class="chat-powered">Powered by Dotzerotech.com</div>
+                <div class="chat-powered">Powered by Customize Your Website Name</div>
             `;
 
             document.body.appendChild(floatBtn);
