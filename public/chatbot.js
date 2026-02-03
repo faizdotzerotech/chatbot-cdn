@@ -279,16 +279,19 @@
                      // Show the element
                      poweredByElement.style.display = 'block';
                      
-                     // Get custom text from various possible field names
-                     const customText = widgetConfig.powered_by_text || 
+                     // Get custom text - check powered_by_custom_name first (primary field)
+                     const customText = widgetConfig.powered_by_custom_name || 
+                                       widgetConfig.powered_by_text || 
                                        widgetConfig.powered_by_label || 
                                        widgetConfig.custom_powered_by ||
-                                       (poweredByValue && typeof poweredByValue === 'string' && poweredByValue.toLowerCase() !== 'hide' ? poweredByValue : null);
+                                       widgetConfig.powered_by_custom_text ||
+                                       widgetConfig.powered_by_custom;
                      
-                     // Update text if custom text is provided, otherwise keep default
-                     if (customText) {
-                         poweredByElement.textContent = customText;
+                     // Update text if custom text is provided
+                     if (customText && customText.trim()) {
+                         poweredByElement.textContent = customText.trim();
                      }
+                     // Otherwise keep default "Powered by Dotzerotech.com"
                  }
              }
         }
