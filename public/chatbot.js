@@ -267,15 +267,28 @@
                 toggleChat(true);
             }
 
-             // Powered By Visibility
+             // Powered By Visibility and Custom Text
              const poweredByElement = popup.querySelector('.chat-powered');
              if (poweredByElement) {
-                 // Check if powered_by is set to "hide" or "Hide" (case insensitive)
                  const poweredByValue = widgetConfig.powered_by || widgetConfig.show_powered_by;
+                 
+                 // Check if should hide
                  if (poweredByValue && (poweredByValue.toLowerCase() === 'hide' || poweredByValue === false)) {
                      poweredByElement.style.display = 'none';
                  } else {
+                     // Show the element
                      poweredByElement.style.display = 'block';
+                     
+                     // Get custom text from various possible field names
+                     const customText = widgetConfig.powered_by_text || 
+                                       widgetConfig.powered_by_label || 
+                                       widgetConfig.custom_powered_by ||
+                                       (poweredByValue && typeof poweredByValue === 'string' && poweredByValue.toLowerCase() !== 'hide' ? poweredByValue : null);
+                     
+                     // Update text if custom text is provided, otherwise keep default
+                     if (customText) {
+                         poweredByElement.textContent = customText;
+                     }
                  }
              }
         }
