@@ -56,7 +56,7 @@
         const DOMAIN = window.location.origin;
 
         let widgetConfig = null;
-        let widgetColor = '#4b7bec'; // Default color
+        let widgetColor = '#e74c3c'; // Default color (red)
         let floatBtn = null;
         let popup = null;
 
