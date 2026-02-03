@@ -266,6 +266,18 @@
             if (widgetConfig.default_state === 'Open') {
                 toggleChat(true);
             }
+
+             // Powered By Visibility
+             const poweredByElement = popup.querySelector('.chat-powered');
+             if (poweredByElement) {
+                 // Check if powered_by is set to "hide" or "Hide" (case insensitive)
+                 const poweredByValue = widgetConfig.powered_by || widgetConfig.show_powered_by;
+                 if (poweredByValue && (poweredByValue.toLowerCase() === 'hide' || poweredByValue === false)) {
+                     poweredByElement.style.display = 'none';
+                 } else {
+                     poweredByElement.style.display = 'block';
+                 }
+             }
         }
 
         // Socket Connection
