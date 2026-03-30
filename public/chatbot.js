@@ -49,8 +49,7 @@
         const getBackendUrl = () => {
             if (window.$chatbot_widget?.apiUrl) return window.$chatbot_widget.apiUrl;
             if (window.location.hostname === 'localhost') return "http://localhost:3000";
-            return "https://phpstack-1582641-6176954.cloudwaysapps.com";
-            // return "https://dashboard.dotzerotech.net";
+            return "https://dashboard.dotzerotech.net";
         };
         const API_URL = getBackendUrl();
         const DOMAIN = window.location.origin;
