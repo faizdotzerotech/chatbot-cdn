@@ -55,25 +55,44 @@
         const DOMAIN = window.location.origin;
 
         let widgetConfig = null;
-        let widgetColor = '#4b7bec'; // Default color
+        let widgetColor = '#e74c3c'; // Default color (red)
+        let widgetIcon = '💬'; // Default icon
         let floatBtn = null;
         let popup = null;
 
         // 🔥 CRITICAL: Fetch config FIRST before creating any elements
         async function fetchWidgetConfigSync() {
-            try {
-                const response = await fetch(`${API_URL}/api/widget-customize/public/${encodeURIComponent(WEBSITE)}`);
-                const data = await response.json();
-                if (data.success && data.data) {
-                    widgetConfig = data.data;
-                    // Set color immediately if config has it
-                    if (widgetConfig.widget_header_color) {
-                        widgetColor = widgetConfig.widget_header_color;
+            const maxRetries = 3;
+            let retryCount = 0;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    const response = await fetch(`${API_URL}/api/widget-customize/public/${encodeURIComponent(WEBSITE)}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
                     }
-                    return true;
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        widgetConfig = data.data;
+                        // Set color immediately if config has it
+                        if (widgetConfig.widget_header_color) {
+                            widgetColor = widgetConfig.widget_header_color;
+                        }
+                        // Set icon if config has it
+                        if (widgetConfig.widget_icon) {
+                            widgetIcon = widgetConfig.widget_icon;
+                        }
+                        return true;
+                    }
+                } catch (error) {
+                    retryCount++;
+                    if (retryCount < maxRetries) {
+                        // Wait before retry (exponential backoff)
+                        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+                        continue;
+                    }
+                    console.error("❌ Widget config error after retries:", error);
                 }
-            } catch (error) {
-                console.error("❌ Widget config error:", error);
             }
             return false;
         }
@@ -93,10 +112,10 @@
             styleTag.innerHTML = createStyles(widgetColor);
             document.head.appendChild(styleTag);
 
-            // Create button with correct color
+            // Create button with correct color and icon
             floatBtn = document.createElement("button");
             floatBtn.id = "chatbot-float-btn";
-            floatBtn.innerHTML = "💬";
+            floatBtn.innerHTML = widgetIcon;
             floatBtn.style.backgroundColor = widgetColor; // Inline style for immediate application
 
             popup = document.createElement("div");
@@ -113,7 +132,7 @@
                     <input type="text" id="user-message" placeholder="Type your message..." />
                     <button id="send-btn">Send</button>
                 </div>
-                <div class="chat-powered">Powered by Dotzerotech.com</div>
+                <div class="chat-powered">Powered by "Your Website Name"</div>
             `;
 
             document.body.appendChild(floatBtn);
@@ -146,13 +165,33 @@
 
             await waitForBody();
 
-            // Fetch config with timeout (max 2 seconds wait)
+            // Fetch config with timeout (max 5 seconds wait) - increased for slow networks
             const configPromise = fetchWidgetConfigSync();
-            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 2000));
-            await Promise.race([configPromise, timeoutPromise]);
+            const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(false), 5000));
+            const configLoaded = await Promise.race([configPromise, timeoutPromise]);
 
-            // Now inject widget with correct color
+            // Now inject widget with correct color and icon
             injectWidget();
+
+            // If config didn't load in time, continue fetching in background and apply when ready
+            if (!configLoaded) {
+                // Continue fetching in background (no timeout for retry)
+                fetchWidgetConfigSync().then((success) => {
+                    if (success && widgetConfig) {
+                        // Config loaded late, update widget now
+                        applyWidgetConfig();
+                        // Also update styles if color changed
+                        if (widgetConfig.widget_header_color && widgetColor !== widgetConfig.widget_header_color) {
+                            const styleTag = document.querySelector('style');
+                            if (styleTag) {
+                                styleTag.innerHTML = createStyles(widgetConfig.widget_header_color);
+                            }
+                        }
+                    }
+                }).catch(err => {
+                    console.warn("Background config fetch failed:", err);
+                });
+            }
         }
 
         // Start initialization
@@ -215,6 +254,9 @@
                         if (widgetConfig.widget_header_color) {
                             widgetColor = widgetConfig.widget_header_color;
                         }
+                        if (widgetConfig.widget_icon) {
+                            widgetIcon = widgetConfig.widget_icon;
+                        }
                         applyWidgetConfig();
                     }
                 } catch (error) {
@@ -232,10 +274,24 @@
                 const sendBtn = popup.querySelector('#send-btn');
 
                 if (header) header.style.backgroundColor = widgetConfig.widget_header_color;
-                if (floatBtn) floatBtn.style.backgroundColor = widgetConfig.widget_header_color;
+                if (floatBtn) {
+                    floatBtn.style.backgroundColor = widgetConfig.widget_header_color;
+                }
                 if (sendBtn) {
                     sendBtn.style.backgroundColor = widgetConfig.widget_header_color;
                     sendBtn.style.borderColor = widgetConfig.widget_header_color;
+                }
+                
+                // Update widgetColor for future use
+                widgetColor = widgetConfig.widget_header_color;
+            }
+
+            // Apply Widget Icon
+            if (widgetConfig.widget_icon && floatBtn) {
+                widgetIcon = widgetConfig.widget_icon;
+                // Only update icon if chat is closed (not showing X)
+                if (!isOpen) {
+                    floatBtn.innerHTML = widgetIcon;
                 }
             }
 
@@ -265,6 +321,34 @@
             if (widgetConfig.default_state === 'Open') {
                 toggleChat(true);
             }
+
+             // Powered By Visibility and Custom Text
+             const poweredByElement = popup.querySelector('.chat-powered');
+             if (poweredByElement) {
+                 const poweredByValue = widgetConfig.powered_by || widgetConfig.show_powered_by;
+                 
+                 // Check if should hide
+                 if (poweredByValue && (poweredByValue.toLowerCase() === 'hide' || poweredByValue === false)) {
+                     poweredByElement.style.display = 'none';
+                 } else {
+                     // Show the element
+                     poweredByElement.style.display = 'block';
+                     
+                     // Get custom text - check powered_by_custom_name first (primary field)
+                     const customText = widgetConfig.powered_by_custom_name || 
+                                       widgetConfig.powered_by_text || 
+                                       widgetConfig.powered_by_label || 
+                                       widgetConfig.custom_powered_by ||
+                                       widgetConfig.powered_by_custom_text ||
+                                       widgetConfig.powered_by_custom;
+                     
+                     // Update text if custom text is provided
+                     if (customText && customText.trim()) {
+                         poweredByElement.textContent = customText.trim();
+                     }
+                     // Otherwise keep default "Powered by Dotzerotech.com"
+                 }
+             }
         }
 
         // Socket Connection
@@ -345,7 +429,7 @@
         function toggleChat(forceOpen = null) {
             isOpen = forceOpen !== null ? forceOpen : !isOpen;
             popup.style.display = isOpen ? "block" : "none";
-            floatBtn.innerHTML = isOpen ? "✖" : "💬";
+            floatBtn.innerHTML = isOpen ? "✖" : widgetIcon;
 
             if (isOpen) {
                 if (!socket || socket.readyState !== 1) connectSocket();
