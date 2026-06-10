@@ -78,6 +78,20 @@
             return DEFAULT_FLOAT_ICON;
         }
 
+        const HEADER_WAVE_ICON = `<svg class="cb-wave-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 13V8.5a1.5 1.5 0 0 1 3 0V12M11 12V7a1.5 1.5 0 0 1 3 0v5M14 12V8a1.5 1.5 0 0 1 3 0v3.5a6 6 0 0 1-12 0V9.5a1.5 1.5 0 0 1 3 0V12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 14.5c.6 2.2 2.8 4.5 8 4.5s7.4-2.3 8-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+
+        function getHeaderAvatarHtml() {
+            return HEADER_WAVE_ICON;
+        }
+
+        function getWelcomeSubtitle(companyName) {
+            if (widgetConfig?.header_welcome_message) {
+                return widgetConfig.header_welcome_message;
+            }
+            const name = companyName || widgetConfig?.company_name || 'our website';
+            return `Welcome to ${name}, Ask anything.`;
+        }
+
         function getBotAvatarHtml() {
             if (widgetConfig?.company_logo) {
                 return `<img src="${widgetConfig.company_logo}" alt="" class="chat-avatar-img" />`;
@@ -167,6 +181,8 @@
 }
 .chat-header-avatar .chat-avatar-img{width:100%;height:100%;object-fit:cover;}
 .chat-header-avatar .chat-avatar-letter{font-size:13px;font-weight:700;letter-spacing:.5px;}
+.chat-header-avatar .cb-wave-icon{width:26px;height:26px;animation:cbWave 2.5s ease-in-out infinite;transform-origin:70% 80%;}
+@keyframes cbWave{0%,100%{transform:rotate(0deg);}10%{transform:rotate(14deg);}20%{transform:rotate(-8deg);}30%{transform:rotate(14deg);}40%{transform:rotate(-4deg);}50%,100%{transform:rotate(0deg);}}
 .chat-header-text{min-width:0;}
 .chat-header-title{font-size:16px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chat-header-subtitle{font-size:12.5px;font-weight:400;opacity:.9;margin-top:2px;line-height:1.4;}
@@ -296,10 +312,10 @@
             popup.innerHTML = `
                 <div class="chat-header">
                     <div class="chat-header-info">
-                        <div class="chat-header-avatar"><span class="chat-avatar-letter">AI</span></div>
+                        <div class="chat-header-avatar">${HEADER_WAVE_ICON}</div>
                         <div class="chat-header-text">
-                            <div class="chat-header-title">Virtual Assistant</div>
-                            <div class="chat-header-subtitle">How can we help you today?</div>
+                            <div class="chat-header-title">Hi There</div>
+                            <div class="chat-header-subtitle">Welcome to our website, Ask anything.</div>
                             <div class="chat-header-status"><span class="status-dot"></span> Online</div>
                         </div>
                     </div>
@@ -482,13 +498,13 @@
             const headerSubtitle = popup.querySelector('.chat-header-subtitle');
 
             if (headerAvatar) {
-                headerAvatar.innerHTML = getBotAvatarHtml();
+                headerAvatar.innerHTML = getHeaderAvatarHtml();
             }
-            if (widgetConfig.company_name && headerTitle) {
-                headerTitle.textContent = widgetConfig.company_name;
+            if (headerTitle) {
+                headerTitle.textContent = 'Hi There';
             }
             if (headerSubtitle) {
-                headerSubtitle.textContent = widgetConfig.header_welcome_message || 'How can we help you today?';
+                headerSubtitle.textContent = getWelcomeSubtitle(widgetConfig.company_name);
             }
 
             // Placement
