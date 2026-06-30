@@ -255,9 +255,9 @@
     padding:12px 14px;gap:10px;background:#fff;
 }
 .chat-input-box textarea{
-    flex:1;padding:12px 16px;font-size:14px;font-family:inherit;line-height:1.4;
+    flex:1;box-sizing:border-box;padding:11px 14px;font-size:14px;font-family:inherit;line-height:1.35;
     border:1.5px solid #e2e8f0;border-radius:12px;outline:none;resize:none;
-    min-height:44px;max-height:120px;overflow-y:auto;
+    height:44px;min-height:44px;max-height:120px;overflow-y:hidden;
     background:#f8fafc;color:#1e293b;transition:border-color .2s,box-shadow .2s,background .2s;
 }
 .chat-input-box textarea::placeholder{color:#94a3b8;}
@@ -323,7 +323,7 @@
                     <div id="chat-messages"></div>
                 </div>
                 <div class="chat-input-box">
-                    <textarea id="user-message" rows="1" placeholder="Type your message... (Shift+Enter for new line)" autocomplete="off"></textarea>
+                    <textarea id="user-message" placeholder="Type your message..." autocomplete="off"></textarea>
                     <button id="send-btn" aria-label="Send message">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -618,10 +618,14 @@
             messageInput.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) handleSend(e);
             });
-            messageInput.addEventListener("input", () => {
-                messageInput.style.height = "auto";
-                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + "px";
-            });
+            messageInput.addEventListener("input", () => resizeMessageInput(messageInput));
+        }
+
+        function resizeMessageInput(el) {
+            el.style.height = "44px";
+            const next = Math.min(el.scrollHeight, 120);
+            el.style.height = next + "px";
+            el.style.overflowY = el.scrollHeight > 120 ? "auto" : "hidden";
         }
 
         let isOpen = false;
@@ -646,7 +650,8 @@
 
             appendMessage("user", msg);
             input.value = "";
-            input.style.height = "auto";
+            input.style.height = "44px";
+            input.style.overflowY = "hidden";
             showTyping();
 
             if (socket && socket.readyState === WebSocket.OPEN) {
