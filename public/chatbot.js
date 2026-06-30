@@ -4,8 +4,6 @@
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
     document.head.appendChild(script);
-
-    // Wait for Marked.js to load before starting the Widget Logic
     script.onload = function () {
         startChatbotWidget();
     };
