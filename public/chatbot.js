@@ -251,16 +251,17 @@
 @keyframes cbTypingDot{0%,60%,100%{transform:translateY(0);opacity:.35;}30%{transform:translateY(-5px);opacity:1;}}
 
 .chat-input-box{
-    display:flex;align-items:center;border-top:1px solid #e2e8f0;
+    display:flex;align-items:flex-end;border-top:1px solid #e2e8f0;
     padding:12px 14px;gap:10px;background:#fff;
 }
-.chat-input-box input{
-    flex:1;padding:12px 16px;font-size:14px;font-family:inherit;
-    border:1.5px solid #e2e8f0;border-radius:12px;outline:none;
+.chat-input-box textarea{
+    flex:1;padding:12px 16px;font-size:14px;font-family:inherit;line-height:1.4;
+    border:1.5px solid #e2e8f0;border-radius:12px;outline:none;resize:none;
+    min-height:44px;max-height:120px;overflow-y:auto;
     background:#f8fafc;color:#1e293b;transition:border-color .2s,box-shadow .2s,background .2s;
 }
-.chat-input-box input::placeholder{color:#94a3b8;}
-.chat-input-box input:focus{border-color:${color};background:#fff;box-shadow:0 0 0 3px ${color}22;}
+.chat-input-box textarea::placeholder{color:#94a3b8;}
+.chat-input-box textarea:focus{border-color:${color};background:#fff;box-shadow:0 0 0 3px ${color}22;}
 .chat-input-box button{
     width:44px;height:44px;min-width:44px;
     background:linear-gradient(135deg,${color} 0%,${color}dd 100%);
@@ -322,7 +323,7 @@
                     <div id="chat-messages"></div>
                 </div>
                 <div class="chat-input-box">
-                    <input type="text" id="user-message" placeholder="Type your message..." autocomplete="off" />
+                    <textarea id="user-message" rows="1" placeholder="Type your message... (Shift+Enter for new line)" autocomplete="off"></textarea>
                     <button id="send-btn" aria-label="Send message">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     </button>
@@ -615,7 +616,11 @@
 
             sendBtn.addEventListener("click", handleSend);
             messageInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") handleSend(e);
+                if (e.key === "Enter" && !e.shiftKey) handleSend(e);
+            });
+            messageInput.addEventListener("input", () => {
+                messageInput.style.height = "auto";
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + "px";
             });
         }
 
@@ -641,6 +646,7 @@
 
             appendMessage("user", msg);
             input.value = "";
+            input.style.height = "auto";
             showTyping();
 
             if (socket && socket.readyState === WebSocket.OPEN) {
