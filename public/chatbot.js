@@ -168,10 +168,19 @@
 
 .chat-header{
     background:linear-gradient(135deg,${color} 0%,${color}cc 100%);
-    color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px;
+    color:#fff;padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
     transition:background .3s;
 }
 .chat-header-info{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.chat-header-btn{
+    width:32px;height:32px;min-width:32px;border:none;border-radius:8px;
+    background:rgba(255,255,255,0.15);color:#fff;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    transition:background .2s,transform .2s;
+}
+.chat-header-btn:hover{background:rgba(255,255,255,0.28);}
+.chat-header-btn:active{transform:scale(.95);}
+.chat-header-btn svg{width:18px;height:18px;}
 .chat-header-avatar{
     width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -318,6 +327,9 @@
                             <div class="chat-header-status"><span class="status-dot"></span> Online</div>
                         </div>
                     </div>
+                    <button id="minimize-btn" class="chat-header-btn" type="button" aria-label="Minimize chat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
                 </div>
                 <div class="chat-body">
                     <div id="chat-messages"></div>
@@ -619,6 +631,14 @@
             const sendBtn = document.getElementById("send-btn");
 
             floatBtn.addEventListener("click", () => toggleChat());
+
+            const minimizeBtn = document.getElementById("minimize-btn");
+            if (minimizeBtn) {
+                minimizeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    toggleChat(false);
+                });
+            }
 
             sendBtn.addEventListener("click", handleSend);
             messageInput.addEventListener("keydown", (e) => {
