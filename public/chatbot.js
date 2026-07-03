@@ -577,27 +577,33 @@
                     if (data.type === "chat" && data.message) {
                         hideTyping();
                         appendMessage("bot", data.message);
+                        return;
+                    }
 
-                        // Handle End of Chat signal - Reset session after thank you message
-                        if (data.message.toLowerCase().includes("our agent will contact you")) {
-                            setTimeout(() => {
-                                // Clear chat messages from UI
-                                const container = document.getElementById("chat-messages");
-                                if (container) {
-                                    container.innerHTML = "";
-                                }
+                    // Handle reset signal (lead saved) → after the farewell is shown,
+                    // wipe this chat and rotate to a brand-new session so the next
+                    // conversation is captured as a new lead.
+                    if (data.type === "reset") {
+                        setTimeout(() => {
+                            const container = document.getElementById("chat-messages");
+                            if (container) container.innerHTML = "";
 
-                                // Clear session storage and generate new chat ID
-                                sessionStorage.clear();
-                                chatId = generateChatId();
+                            sessionStorage.clear();
+                            chatId = generateChatId();
 
-                                // Reconnect socket with new chat ID
-                                if (socket) {
-                                    socket.close();
-                                }
-                                connectSocket();
-                            }, 2000);
-                        }
+                            const input = document.getElementById("user-message");
+                            if (input) input.disabled = false;
+
+                            // Detach the old auto-reconnect so we don't spawn a duplicate
+                            // socket, then reconnect with the new chatId. The server sends
+                            // a fresh greeting because the new chatId has no history.
+                            if (socket) {
+                                socket.onclose = null;
+                                try { socket.close(); } catch (e) { /* noop */ }
+                            }
+                            connectSocket();
+                        }, 3000);
+                        return;
                     }
                 } catch (err) { console.warn(err); }
             };
